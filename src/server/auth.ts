@@ -29,17 +29,42 @@ declare module "next-auth" {
  * @see https://next-auth.js.org/configuration/options
  */
 export const authOptions: NextAuthOptions = {
+  session: {
+    strategy: "jwt"
+  },
+  pages: {
+    signIn: "/signin"
+  },
   callbacks: {
-    session: ({ session, user }) => ({
+    session: ({ session, token }) => ({
       ...session,
-      user: {
-        ...session.user,
-        id: user.id,
-      },
+      user: session.user,
+      token: token,
     }),
+    jwt: ({ token, user }) => ({
+      ...token,
+      user: user,
+    })
   },
   adapter: PrismaAdapter(db),
   providers: [
+    CredentialsProvider({
+      name: "Credentials",
+      credentials: {
+        username: { label: "Username", type: "text" },
+        password: { label: "Password", type: "password" }
+      },
+      authorize: async (credentials) => {
+        if (credentials?.username === "jhondoe" && credentials.password === "password") {
+          return {
+            id: "jhon_the_savior"
+          }
+        }
+        else {
+          throw new Error("Unauthorized")
+        }
+      },
+    })
   ],
 };
 
